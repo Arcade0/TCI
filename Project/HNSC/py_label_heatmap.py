@@ -23,12 +23,13 @@ def label_heatmap(
     A modification which is based on sns.clustermap.
 
     Args:
-        dfi: 2-D dfi, index are sample IDs, columns are SGAs or gene names. dfi's value is 0 or 1.
-            It needs contain a columns with label information in the last column.
+        dfi: 2-D dfi, index are sample IDs, columns are SGAs or gene names. 
+        dfi's value is 0 or 1.It needs contain a columns with label information
+        in the last column.
         fen_l: list of dfi index, index which are used to split samples into several groups.
-        r_c, c_c, y_t, x_t: Bool value, True or False, parameters which are used in sns.clustermap.
-                            values of "row_cluster", "col_cluster", "yticklabels", "xticklabels". Default
-                            is False.
+        r_c, c_c, y_t, x_t: Bool value, True or False, parameters which are used in
+        sns.clustermap. values of "row_cluster", "col_cluster", "yticklabels", "xticklabels". 
+        Default is False.
         color_pal:A list of color. Used in sns.clustermap, value of "cmap".
         col_name, row_name: String.
         continous: Bool value, data type.
@@ -57,7 +58,8 @@ def label_heatmap(
         dfi.drop(label_column, axis=1), figsize=(10, 10),
         row_cluster=r_c, col_cluster=c_c,
         yticklabels=y_t, xticklabels=x_t,
-        row_colors=[rc_colors],  # Add colored class labels using data frame created from node and network colors
+        row_colors=[rc_colors],  
+        # Add colored class labels using data frame created from node and network colors
         cmap=color_pal)  # Make the plot look better when many rows/cols
 
     ax0 = g.ax_heatmap

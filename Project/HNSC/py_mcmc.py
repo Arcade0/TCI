@@ -18,13 +18,18 @@ def mcmc(
     A iteration which based on sklearn BernoulliNB.
 
     Args:
-        sp_sga_l: 2-D df, index are sample IDs, columns are SGAs or gene names. df's value is 0 or 1.
-        sp_deg_l: 2-D df, index are sample IDs, columns are DEGs or gene names. df's value is 0 or 1.
-        sp_sga_t: 2-D df, index are sample IDs, columns are SGAs or gene names. df's value is 0 or 1. This one 
-                  is used for test. Equals to sp_sga_l if want to run EM.
-        sp_deg_t: 2-D df, index are sample IDs, columns are DEGs or gene names. df's value is 0 or 1. This one 
-                  is used for test. Equals to sp_deg_l if want to run EM.
-        sga_deg: 2-D df, index are SGAs or gene names, columns are DEGs or gene names. df's value is 0 or 1.
+        sp_sga_l: 2-D df, index are sample IDs, columns are SGAs or gene names. 
+        df's value is 0 or 1.
+        sp_deg_l: 2-D df, index are sample IDs, columns are DEGs or gene names. 
+        df's value is 0 or 1.
+        sp_sga_t: 2-D df, index are sample IDs, columns are SGAs or gene names. 
+        df's value is 0 or 1. This one is used for test. Equals to sp_sga_l if 
+        want to run EM.
+        sp_deg_t: 2-D df, index are sample IDs, columns are DEGs or gene names. 
+        df's value is 0 or 1. This one is used for test. Equals to sp_deg_l if 
+        want to run EM.
+        sga_deg: 2-D df, index are SGAs or gene names, columns are DEGs or gene 
+        names. df's value is 0 or 1.
         mcmc: Compare the probility matrix with a random matrix, default is True.
         chal: The value used to duplicate df if mcmc is needed. default is 5.
         fix_mutation: Wether fixed mutaion in sp_sga. default is True. 
@@ -33,10 +38,12 @@ def mcmc(
         
 
     Returns:
-        sp_pro_t: 2-D df, index are sample IDs, columns are SGAs or gene names. df's value is 0 or 1.
-                  this df is the hidden variable's or protein's prediction.
-        pa1_ll: Two layer list which are used to save p(SGA=1), The first layer orders from sp_sga's columns, 
-                the second layer orders from iteration times.
+        sp_pro_t: 2-D df, index are sample IDs, columns are SGAs or gene names. 
+        df's value is 0 or 1. this df is the hidden variable's or protein's 
+        prediction.
+        pa1_ll: Two layer list which are used to save p(SGA=1), The first 
+        layer orders from sp_sga's columns, the second layer orders from 
+        iteration times.
     """
     # Avoid changing input
     sp_sga_l = deepcopy(sp_sga_l_v)
@@ -75,7 +82,8 @@ def mcmc(
         deg_l = [ele for ele in sga_deg.columns if sga_deg.loc[sga, ele] == 1]
         sga_l = list((np.sum(sga_deg[deg_l], 1) > 0).index).remove(sga)
 
-        sp_sga_dl = np.tile(sp_sga_l.loc[:, [sga]].values, (chal, 1)) # np.tile(df, (chal, 1)) is dulpicate size
+        sp_sga_dl = np.tile(sp_sga_l.loc[:, [sga]].values, (chal, 1)) 
+        # np.tile(df, (chal, 1)) is dulpicate size
         sp_dsga_dl = np.tile(sp_sga_l.loc[:, [sga_l]].values, (chal, 1))
         sp_deg_dl = np.tile(sp_deg_l.loc[:, deg_l].values, (chal, 1))
         sp_deg_dl = np.hstack((sp_dsga_dl, sp_deg_dl))
@@ -89,7 +97,9 @@ def mcmc(
 
         for i in range(ite):
 
-            sp_pro_dt = NB.predict_proba(sp_deg_dt)[:, [1]].reshape([sp_sga_dt.shape[0], 1])  # NB.predict_proba() give two columns probability.
+            sp_pro_dt = NB.predict_proba(sp_deg_dt)[:, [1]].reshape(
+                [sp_sga_dt.shape[0], 1])  
+            # NB.predict_proba() give two columns probability.
 
             if mcmc == True:
                 mc_m = np.random.rand(sp_pro_dt.shape[0], sp_pro_dt.shape[1])
@@ -110,7 +120,8 @@ def mcmc(
                 if abs(pa1_l[i] - pa1_l[i - 1]) < cover_thres:
                     break
 
-            NB = BernoulliNB().fit(sp_deg_dt, np.ravel(sp_pro_dt))  # np.ravel() covert 2-D array into list
+            NB = BernoulliNB().fit(sp_deg_dt, np.ravel(sp_pro_dt))  
+            # np.ravel() covert 2-D array into list
 
         pa1_ll.append(pa1_l)
         sp_pro_t = np.hstack(
