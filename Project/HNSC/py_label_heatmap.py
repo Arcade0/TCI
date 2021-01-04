@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from copy import deepcopy
 
 def label_heatmap(
-    dfi, fen_l, color_pal, 
+    dfi, color_pal, 
     dfi_labels,rc_labels, dfi_pal,rc_pal,  
     df_legend_position=(0.1, 0.4), rc_legend_position=(0.1, 0.5),
     label_column="subtype",
@@ -26,7 +26,6 @@ def label_heatmap(
         dfi: 2-D dfi, index are sample IDs, columns are SGAs or gene names. 
         dfi's value is 0 or 1.It needs contain a columns with label information
         in the last column.
-        fen_l: list of dfi index, index which are used to split samples into several groups.
         r_c, c_c, y_t, x_t: Bool value, True or False, parameters which are used in
         sns.clustermap. values of "row_cluster", "col_cluster", "yticklabels", "xticklabels". 
         Default is False.
@@ -50,6 +49,9 @@ def label_heatmap(
     dfi_lut = dict(zip(dfi_labels, dfi_pal))  # one by one
 
     # set row_color panel
+#     labs = ['Atypical','Basal','Classical','Mesenchymal'] # this two line is for paper
+#     rc_lut = dict(zip(labs, rc_pal))  # one by one 
+
     rc_lut = dict(zip(rc_labels.unique(), rc_pal))  # one by one 
     rc_colors = rc_labels.map(rc_lut)  # lut to all labels
 
@@ -88,6 +90,8 @@ def label_heatmap(
     # set legend of row color bars
     ax1 = g.ax_row_colors
     for label in rc_labels.unique():
+#     for label in labs:
+
         ax1.bar(0, 0, color=rc_lut[label], label=label, linewidth=0)
     ax1.legend(
             title=rc_legend_title, loc="center", ncol=1, 
