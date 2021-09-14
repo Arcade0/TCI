@@ -2,21 +2,17 @@
 
 import pandas as pd
 import numpy as np
-import sys
 import os
 import time
-import javabridge
-from multiprocessing import Process
 from copy import deepcopy
 
 
 def create_knowledge(sga_l_v, sga_deg_v, knowledge_path):
-    
     """Used to create knowledge file for tetrad.
 
     Args:
         sga_l: A list contains SGAs.
-        sga_deg: 2-D df, index are SGAs or gene names, 
+        sga_deg: 2-D df, index are SGAs or gene names,
                  columns are SGAs or gene names, df's values should be 0 or 1.
         knowledge_path: String, file path to save knowledge file.
 
@@ -28,10 +24,13 @@ def create_knowledge(sga_l_v, sga_deg_v, knowledge_path):
     sga_deg = deepcopy(sga_deg_v)
 
     sga_deg["cause gene name"] = sga_deg.index
-    sga_deg_l = pd.melt(
-        sga_deg, id_vars="cause gene name", value_vars=list(sga_deg.columns[0:-1]),
-        var_name="result gene name", value_name="value")
-    forbid_l = sga_deg_l[sga_deg_l["value"] == 0].iloc[:, [0, 1]].values.tolist()
+    sga_deg_l = pd.melt(sga_deg,
+                        id_vars="cause gene name",
+                        value_vars=list(sga_deg.columns[0:-1]),
+                        var_name="result gene name",
+                        value_name="value")
+    forbid_l = sga_deg_l[sga_deg_l["value"] == 0].iloc[:,
+                                                       [0, 1]].values.tolist()
 
     with open(knowledge_path, "w") as f:
         f.write("/knowledge\n" + "forbiddirect\n")
@@ -45,8 +44,8 @@ def create_knowledge(sga_l_v, sga_deg_v, knowledge_path):
     with open(knowledge_path, "a") as f:
         f.write("requiredirect\n" + "addtemporal\n" + sga_s + "\n" + deg_s)
 
+
 def data_pp(sp_sga_v, sp_pro_v, sp_deg_v, sga_deg_v, sga_l_v):
-    
     """Notes for data_pp.
 
     Args:
@@ -56,13 +55,13 @@ def data_pp(sp_sga_v, sp_pro_v, sp_deg_v, sga_deg_v, sga_l_v):
         sga_deg: 2-D df, index are SGAs or gene names, columns are DEGs or gene names. df's value is 0 or 1.
         sga_l: A list contains SGAs.
         knowledge_path: String, file path to save knowledge file.
-    
+
     Returns:
         sp_sga: 2-D df, index are sample IDs, columns are SGAs or gene names, used in mcmc.
         sp_pro_deg: 2-D df, index are sample IDs, columns are SGAs and DGEs names, used in mcmc.
     """
 
-    #avoid changing input file
+    # avoid changing input file
     sp_sga = deepcopy(sp_sga_v)
     sp_pro = deepcopy(sp_pro_v)
     sp_deg = deepcopy(sp_deg_v)
@@ -72,22 +71,23 @@ def data_pp(sp_sga_v, sp_pro_v, sp_deg_v, sga_deg_v, sga_l_v):
     # data prepration
     sga_l = sga_deg.index & set(sga_l)
     sga_deg = sga_deg.loc[sga_l, np.sum(sga_deg.loc[sga_l], 0) >= 1]
-    sga_deg = sga_deg.loc[sp_sga.columns & sga_deg.index, sp_deg.columns & sga_deg.columns]
+    sga_deg = sga_deg.loc[sp_sga.columns & sga_deg.index,
+                          sp_deg.columns & sga_deg.columns]
     sp_sga = sp_sga[sga_deg.index]
     sp_pro = sp_pro[sga_deg.index]
     sp_deg = sp_deg[sga_deg.columns]
-    
+
     # add pre-add
-    if 'sga:' not in sp_sga.columns[0]: 
-        sp_sga.columns = ['sga:'+ele for ele in sp_sga.columns]
+    if 'sga:' not in sp_sga.columns[0]:
+        sp_sga.columns = ['sga:' + ele for ele in sp_sga.columns]
     if 'sga:' not in sp_pro.columns[0]:
-        sp_pro.columns = ['sga:'+ele for ele in sp_pro.columns]
+        sp_pro.columns = ['sga:' + ele for ele in sp_pro.columns]
     if 'deg:' not in sp_deg.columns[0]:
-        sp_deg.columns = ['deg:'+ele for ele in sp_deg.columns]
+        sp_deg.columns = ['deg:' + ele for ele in sp_deg.columns]
     if 'sga:' not in sga_deg.index[0]:
-        sga_deg.index = ['sga:'+ele for ele in sga_deg.index]
+        sga_deg.index = ['sga:' + ele for ele in sga_deg.index]
     if 'deg:' not in sga_deg.columns[0]:
-        sga_deg.columns = ['deg:'+ele for ele in sga_deg.columns]
+        sga_deg.columns = ['deg:' + ele for ele in sga_deg.columns]
     if 'sga:' not in sga_l[0]:
         sga_l = ["sga:" + ele for ele in sga_l]
 
@@ -95,28 +95,38 @@ def data_pp(sp_sga_v, sp_pro_v, sp_deg_v, sga_deg_v, sga_l_v):
 
     return sp_sga, sp_pro_deg, sga_l, sga_deg
 
-def py_causal(
-    sp_pro_deg_v, knowledge_path, bp=False, 
-    dataType="discrete", algoId="fges",
-    scoreId="disc-bic-score", structurePrior=1.0, samplePrior=1.0, maxDegree=20,
-    faithfulnessAssumed=True, symmetricFirstStep=True, verbose=True, 
-    numberResampling=100, percentResampleSize=90, resamplingEnsemble=1,
-    addOriginalDataset=True, resamplingWithReplacement=True):
 
+def py_causal(sp_pro_deg_v,
+              knowledge_path,
+              bp=False,
+              dataType="discrete",
+              algoId="fges",
+              scoreId="disc-bic-score",
+              structurePrior=1.0,
+              samplePrior=1.0,
+              maxDegree=20,
+              faithfulnessAssumed=True,
+              symmetricFirstStep=True,
+              verbose=True,
+              numberResampling=100,
+              percentResampleSize=90,
+              resamplingEnsemble=1,
+              addOriginalDataset=True,
+              resamplingWithReplacement=True):
     """Notes for py_causal.
 
     Args:
-        sp_sga_deg: 2-D df, index are sample IDs, columns are SGAs and DGEs names. 
+        sp_sga_deg: 2-D df, index are sample IDs, columns are SGAs and DGEs names.
                     df's value is 0 or 1.
         bp: bool, using bootstrap. Default is False.
-        
+
     Returns:
         node_l: A list of contain nodes in network.
-        edge_l: A 2-D df contains two columns, source node to target node, 
+        edge_l: A 2-D df contains two columns, source node to target node,
                 didn't contain edge without direction.
         bic: fges output, contain nodes, edges, network score.
     """
-    #avoid changing input file
+    # avoid changing input file
     sp_pro_deg = deepcopy(sp_pro_deg_v)
 
     # connect to java
@@ -125,33 +135,49 @@ def py_causal(
     pc.start_vm(java_max_heap_size="1000M")
 
     # generate knowledge
-    from pycausal import prior as p 
+    from pycausal import prior as p
     prior = p.knowledgeFromFile(knowledge_path)
 
     # search
     from pycausal import search as s
     tetrad = s.tetradrunner()
 
-    if bp == True:
-        tetrad.run(
-            dfs=sp_pro_deg, priorKnowledge=prior, 
-            dataType=dataType, algoId=algoId,
-            scoreId=scoreId, structurePrior=structurePrior, samplePrior=samplePrior, maxDegree=maxDegree,
-            faithfulnessAssumed=faithfulnessAssumed, symmetricFirstStep=symmetricFirstStep, verbose=verbose, 
-            numberResampling=numberResampling, percentResampleSize=percentResampleSize, resamplingEnsemble=resamplingEnsemble,
-            addOriginalDataset=addOriginalDataset, resamplingWithReplacement=resamplingWithReplacement)
+    if bp is True:
+        tetrad.run(dfs=sp_pro_deg,
+                   priorKnowledge=prior,
+                   dataType=dataType,
+                   algoId=algoId,
+                   scoreId=scoreId,
+                   structurePrior=structurePrior,
+                   samplePrior=samplePrior,
+                   maxDegree=maxDegree,
+                   faithfulnessAssumed=faithfulnessAssumed,
+                   symmetricFirstStep=symmetricFirstStep,
+                   verbose=verbose,
+                   numberResampling=numberResampling,
+                   percentResampleSize=percentResampleSize,
+                   resamplingEnsemble=resamplingEnsemble,
+                   addOriginalDataset=addOriginalDataset,
+                   resamplingWithReplacement=resamplingWithReplacement)
     else:
-        tetrad.run(
-            dfs=sp_pro_deg, priorKnowledge=prior, 
-            dataType=dataType, algoId=algoId,
-            scoreId=scoreId, structurePrior=structurePrior, samplePrior=samplePrior, maxDegree=maxDegree,
-            faithfulnessAssumed=faithfulnessAssumed, symmetricFirstStep=symmetricFirstStep, verbose=verbose)
+        tetrad.run(dfs=sp_pro_deg,
+                   priorKnowledge=prior,
+                   dataType=dataType,
+                   algoId=algoId,
+                   scoreId=scoreId,
+                   structurePrior=structurePrior,
+                   samplePrior=samplePrior,
+                   maxDegree=maxDegree,
+                   faithfulnessAssumed=faithfulnessAssumed,
+                   symmetricFirstStep=symmetricFirstStep,
+                   verbose=verbose)
 
     node_l = tetrad.getNodes()
     edge_l = tetrad.getEdges()
     bic = tetrad.getTetradGraph()
 
     return node_l, edge_l, bic
+
 
 def java_causal(input_path, out_path, knowledge_path):
 
@@ -160,10 +186,10 @@ def java_causal(input_path, out_path, knowledge_path):
         "java -jar causal-cmd-1.1.3-jar-with-dependencies.jar --algorithm fges \
         --score disc-bic-score --dataset %s --data-type discrete --delimiter comma \
         --knowledge %s --faithfulnessAssumed True --symmetricFirstStep True \
-        --verbose True" % (input_path,knowledge_path))
+        --verbose True" % (input_path, knowledge_path))
+
 
 def mcmc(file_path, i, j, mcmc_ite=50):
-
     """Notes for mcmc.
 
     Args:
@@ -171,7 +197,7 @@ def mcmc(file_path, i, j, mcmc_ite=50):
         i: int, used in run loop.
         j: int, used in run loop.
         mcmc_ite: The max iteration times of running mcmc. Dafault is 50.
-        
+
     Returns:
         Save a modified new matrix to file_path folder.
     """
@@ -187,16 +213,30 @@ def mcmc(file_path, i, j, mcmc_ite=50):
     time.sleep(20)
     print(x)
 
-def fges_mcmc(
-    sp_sga_v, sp_pro_v, sp_deg_v, sga_deg_v, sga_l_v, 
-    file_path, sys_iter=10, bp=False, 
-    dataType="discrete", algoId="fges",
-    scoreId="disc-bic-score", structurePrior=1.0, samplePrior=1.0, maxDegree=20,
-    faithfulnessAssumed=True, symmetricFirstStep=True, verbose=True, 
-    numberResampling=100, percentResampleSize=90, resamplingEnsemble=1,
-    addOriginalDataset=True, resamplingWithReplacement=True, 
-    mcmc_ite=50):
 
+def fges_mcmc(sp_sga_v,
+              sp_pro_v,
+              sp_deg_v,
+              sga_deg_v,
+              sga_l_v,
+              file_path,
+              sys_iter=10,
+              bp=False,
+              dataType="discrete",
+              algoId="fges",
+              scoreId="disc-bic-score",
+              structurePrior=1.0,
+              samplePrior=1.0,
+              maxDegree=20,
+              faithfulnessAssumed=True,
+              symmetricFirstStep=True,
+              verbose=True,
+              numberResampling=100,
+              percentResampleSize=90,
+              resamplingEnsemble=1,
+              addOriginalDataset=True,
+              resamplingWithReplacement=True,
+              mcmc_ite=50):
     """Notes for py_causal.
 
     Args:
@@ -209,56 +249,76 @@ def fges_mcmc(
         sys_iter: Int, The max iteration times of running fges_mcmc loop, Default=10.
         bp: bool, using bootstrap. Default is False.
         mcmc_ite: The max iteration times of running mcmc. Defalut is 50.
-        
+
     Returns:
         py_causal save node_l, edge_l, bic to current run folder,
         mcmc save modified sp_pro_deg to next folder.
-    
+
     """
 
-    #avoid changing input file
+    # avoid changing input file
     sp_sga = deepcopy(sp_sga_v)
     sp_pro = deepcopy(sp_pro_v)
     sp_deg = deepcopy(sp_deg_v)
     sga_deg = deepcopy(sga_deg_v)
     sga_l = deepcopy(sga_l_v)
 
-    if os.path.exists(file_path + "/run0") == False: os.makedirs(file_path + "/run0")
-    
+    if os.path.exists(file_path + "/run0") is False:
+        os.makedirs(file_path + "/run0")
+
     # data prepration
     sp_sga_sub, sp_pro_deg_sub, sga_l_sub, sga_deg_sub = data_pp(
         sp_sga, sp_pro, sp_deg, sga_deg, sga_l)
 
-    sp_sga_sub = pd.concat([sp_sga_sub]*5, ignore_index=False)
-    sp_sga_sub.to_csv(file_path+'/sp_sga.csv', header=True, index=False)
-    
+    sp_sga_sub = pd.concat([sp_sga_sub] * 5, ignore_index=False)
+    sp_sga_sub.to_csv(file_path + '/sp_sga.csv', header=True, index=False)
+
     knowledge_path = file_path + "/Knowledge.txt"
     create_knowledge(sga_l_sub, sga_deg_sub, knowledge_path)
 
-    sp_pro_deg_sub = pd.concat([sp_pro_deg_sub]*5, ignore_index=False)
-    sp_pro_deg_sub.to_csv(file_path+'/run0/completeMatrix.csv', header=True, index=False)
-     
+    sp_pro_deg_sub = pd.concat([sp_pro_deg_sub] * 5, ignore_index=False)
+    sp_pro_deg_sub.to_csv(file_path + '/run0/completeMatrix.csv',
+                          header=True,
+                          index=False)
+
     # run FGES + MCMC
-    for i in range(sys_iter):  
+    for i in range(sys_iter):
 
         file_l = os.listdir(file_path + "/run%i" % i)
         while "BIC.txt" not in file_l:
 
-            sp_pro_deg_sub = pd.read_csv(
-                file_path+'/run%i/completeMatrix.csv' % i, header=0, index_col=None)
-           
+            sp_pro_deg_sub = pd.read_csv(file_path +
+                                         '/run%i/completeMatrix.csv' % i,
+                                         header=0,
+                                         index_col=None)
+
             node_l, edge_l, bic = py_causal(
-                sp_pro_deg_v=sp_pro_deg_sub, knowledge_path=knowledge_path, bp=bp, 
-                dataType=dataType, algoId=algoId,
-                scoreId=scoreId, structurePrior=structurePrior, samplePrior=samplePrior, maxDegree=maxDegree,
-                faithfulnessAssumed=faithfulnessAssumed, symmetricFirstStep=symmetricFirstStep, verbose=verbose, 
-                numberResampling=numberResampling, percentResampleSize=percentResampleSize, resamplingEnsemble=resamplingEnsemble,
-                addOriginalDataset=addOriginalDataset, resamplingWithReplacement=resamplingWithReplacement)
+                sp_pro_deg_v=sp_pro_deg_sub,
+                knowledge_path=knowledge_path,
+                bp=bp,
+                dataType=dataType,
+                algoId=algoId,
+                scoreId=scoreId,
+                structurePrior=structurePrior,
+                samplePrior=samplePrior,
+                maxDegree=maxDegree,
+                faithfulnessAssumed=faithfulnessAssumed,
+                symmetricFirstStep=symmetricFirstStep,
+                verbose=verbose,
+                numberResampling=numberResampling,
+                percentResampleSize=percentResampleSize,
+                resamplingEnsemble=resamplingEnsemble,
+                addOriginalDataset=addOriginalDataset,
+                resamplingWithReplacement=resamplingWithReplacement)
 
             # save edges.csv
-            edge_split_l = [edge.split(" ")for edge in edge_l if "---" not in edge]
+            edge_split_l = [
+                edge.split(" ") for edge in edge_l if "---" not in edge
+            ]
             edge_df = pd.DataFrame(edge_split_l).iloc[:, [0, 2]]
-            edge_df.to_csv(file_path + "/run%i/Edge.csv" %i, index=False, header=False)
+            edge_df.to_csv(file_path + "/run%i/Edge.csv" % i,
+                           index=False,
+                           header=False)
 
             # save BIC.txt
             bic_f = open(file_path + "/run%i/BIC.txt" % i, "w")
@@ -269,9 +329,9 @@ def fges_mcmc(
 
         else:
 
-            j = i+1
+            j = i + 1
 
-            if os.path.exists(file_path + "/run%d" % j) == False:
+            if os.path.exists(file_path + "/run%d" % j) is False:
                 os.makedirs(file_path + "/run%d" % j)
 
             next_file_l = os.listdir(file_path + "/run%i" % j)

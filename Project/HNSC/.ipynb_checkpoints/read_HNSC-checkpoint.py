@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 # HNSC
 # HNSC TCI MUT
 S_Ai = pd.read_csv("chunhui/Output/HNSC/S_Ai_clu.csv", header=0, index_col=0)
@@ -51,8 +51,8 @@ S_Dct_f = ["TCGA-F7-7848", "TCGA-CV-7180", "TCGA-F7-A623"]
 # clinic data
 cli = pd.read_csv("chunhui/Input/HNSC/TCGA/HNSC_clinicalMatrix", sep="\t")
 cli.index = cli["sampleID"]
-ncli = ncli.loc[[ele for ele in cli.index if "-11" in ele],:]
-acli = acli.loc[[ele for ele in cli.index if "-01" in ele],:]
+ncli = cli.loc[[ele for ele in cli.index if "-11" in ele],:]
+acli = cli.loc[[ele for ele in cli.index if "-01" in ele],:]
 # rf.index = [ele[0:12] for ele in rf.index]
 
 sta = pd.read_csv("chunhui/Input/HNSC/hnsc_tcga_pan_can_atlas_2018_clinical_data.tsv", sep="\t")
